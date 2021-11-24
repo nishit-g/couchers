@@ -102,21 +102,13 @@ def delete_event(event_id):
                 session.query(EventOrganizer)
                 .filter(
                     (EventOrganizer.event_id == event.id)
-                    & (EventOrganizer.user_id == sub.id)
+                    & (EventOrganizer.user_id == org.id)
                 )
                 .one()
             )
             session.delete(org_entry)
         for att in event_occurrence.attendees:
-            att_entry = (
-                session.query(EventOccurrenceAttendee)
-                .filter(
-                    (EventOccurrenceAttendee.occurence_id == event_occurrence.id)
-                    & (EventOccurrenceAttendee.user_id == sub.id)
-                )
-                .one()
-            )
-            session.delete(att_entry)
+            session.delete(att)
 
         session.delete(thread)
         session.delete(event_occurrence)
