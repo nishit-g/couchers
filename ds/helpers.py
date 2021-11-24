@@ -12,11 +12,23 @@ from tqdm.notebook import tqdm
 
 from couchers.config import config
 from couchers.db import session_scope
-from couchers.models import (Cluster, ClusterRole, ClusterSubscription,
-                             Discussion, EventOccurrence,
-                             EventOccurrenceAttendee, EventOrganizer,
-                             EventSubscription, Invoice, Node, Page, PageType,
-                             PageVersion, Thread, User)
+from couchers.models import (
+    Cluster,
+    ClusterRole,
+    ClusterSubscription,
+    Discussion,
+    EventOccurrence,
+    EventOccurrenceAttendee,
+    EventOrganizer,
+    EventSubscription,
+    Invoice,
+    Node,
+    Page,
+    PageType,
+    PageVersion,
+    Thread,
+    User,
+)
 from couchers.utils import create_coordinate, to_multi
 
 
@@ -114,6 +126,30 @@ def delete_event(event_id):
         session.delete(event_occurrence)
         session.delete(event)
         session.commit()
+
+
+def move_event(event_id, target_community_id):
+
+    with session_scope() as session:
+
+        event_occurrence = (
+            session.query(EventOccurrence).filter(EventOccurrence.id == event_id).one()
+        )
+        event = event_occurrence.event
+
+        target_node = session.query(Node).filter(Node.id == target_community_id).one()
+
+        event_name = event.title
+        current_community_name = event.parent_node.official_cluster.name
+        target_community_name = target_node.official_cluster.name
+
+        event.parent_node = target_node
+        event.parent_node_id = target_node.id
+        session.commit()
+
+    print(
+        f"{event_name} has been moved from the {current_community_name} to the {target_community_name} community"
+    )
 
 
 def new_admin(community_node_id, username):
@@ -501,7 +537,7 @@ def donations_plot(window_num_days=31):
 
     day_df[f"last_{window_num_days}_avg"] = day_df.apply(
         lambda row: day_df[
-            row.name - dt.timedelta(days=window_num_days): row.name
+            row.name - dt.timedelta(days=window_num_days) : row.name
         ].amount.sum()
         / window_num_days,
         axis=1,
