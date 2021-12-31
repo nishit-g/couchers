@@ -27,6 +27,7 @@ import CouchersLogo from "resources/CouchersLogo";
 import {
   donationsRoute,
   eventsRoute,
+  featurePreviewRoute,
   handbookURL,
   logoutRoute,
   messagesRoute,
@@ -49,7 +50,18 @@ import {
 } from "../../constants";
 import NavButton from "./NavButton";
 
-const menu = (data: ReturnType<typeof useNotifications>["data"]) => [
+interface MenuItemProps {
+  name: string;
+  route: string;
+  notificationCount?: number;
+  externalLink?: boolean;
+  hasBottomDivider?: boolean;
+}
+
+type MenuGenData = ReturnType<typeof useNotifications>["data"];
+
+// shown on mobile/small screens
+const drawerMenu = (data: MenuGenData): Array<MenuItemProps> => [
   {
     name: DASHBOARD,
     route: "/",
@@ -71,12 +83,54 @@ const menu = (data: ReturnType<typeof useNotifications>["data"]) => [
     route: routeToProfile(),
   },
   {
+    name: "Account settings",
+    route: settingsRoute,
+  },
+  {
+    name: "Feature preview",
+    route: featurePreviewRoute,
+  },
+  {
+    name: EVENTS,
+    route: eventsRoute,
+  },
+  {
+    name: HELP,
+    route: handbookURL,
+    externalLink: true,
+  },
+  {
+    name: LOG_OUT,
+    route: logoutRoute,
+  },
+];
+
+// shown on desktop and big screens on top of the screen
+const navMenu = (data: MenuGenData): Array<MenuItemProps> => [
+  {
+    name: DASHBOARD,
+    route: "/",
+  },
+  {
+    name: MESSAGES,
+    route: messagesRoute,
+    notificationCount:
+      (data?.unseenMessageCount ?? 0) +
+      (data?.unseenReceivedHostRequestCount ?? 0) +
+      (data?.unseenSentHostRequestCount ?? 0),
+  },
+  {
+    name: MAP_SEARCH,
+    route: searchRoute,
+  },
+  {
     name: EVENTS,
     route: eventsRoute,
   },
 ];
 
-const menuDropDown = (data: ReturnType<typeof useNotifications>["data"]) => [
+// shown on desktop and big screens in the top right corner
+const menuDropDown = (data: MenuGenData): Array<MenuItemProps> => [
   {
     name: PROFILE,
     route: routeToProfile(),
@@ -91,13 +145,16 @@ const menuDropDown = (data: ReturnType<typeof useNotifications>["data"]) => [
       (data?.unseenSentHostRequestCount ?? 0),
   },
   {
-    name: "Account",
+    name: "Account settings",
     route: settingsRoute,
+  },
+  {
+    name: "Feature preview",
+    route: featurePreviewRoute,
     hasBottomDivider: true,
   },
   {
     name: HELP,
-    target: "_blank",
     route: handbookURL,
     externalLink: true,
   },
@@ -230,39 +287,32 @@ export default function Navigation() {
   const drawerItems = (
     <div>
       <List>
-        {menu(data).map(({ name, route, notificationCount }) => (
-          <ListItem button key={name}>
-            <NavButton
-              route={route}
-              label={name}
-              labelVariant="h2"
-              notificationCount={notificationCount}
-            />
-          </ListItem>
-        ))}
-        <ListItem button>
-          <ExternalNavButton
-            route={handbookURL}
-            label={HELP}
-            labelVariant="h2"
-          />
-        </ListItem>
-        <ListItem button>
-          <NavButton route={logoutRoute} label={LOG_OUT} labelVariant="h2" />
-        </ListItem>
+        {drawerMenu(data).map(
+          ({ name, route, notificationCount, externalLink }) => (
+            <ListItem button key={name}>
+              {externalLink ? (
+                <ExternalNavButton
+                  route={route}
+                  label={name}
+                  labelVariant="h2"
+                />
+              ) : (
+                <NavButton
+                  route={route}
+                  label={name}
+                  labelVariant="h2"
+                  notificationCount={notificationCount}
+                />
+              )}
+            </ListItem>
+          )
+        )}
       </List>
     </div>
   );
 
   const menuItems = menuDropDown(data).map(
-    ({
-      name,
-      notificationCount,
-      route,
-      target,
-      externalLink,
-      hasBottomDivider,
-    }) => {
+    ({ name, notificationCount, route, externalLink, hasBottomDivider }) => {
       const hasNotification =
         notificationCount !== undefined && notificationCount > 0;
 
@@ -297,7 +347,7 @@ export default function Navigation() {
             <a
               href={route}
               key={name}
-              target={target}
+              target="_blank"
               onClick={() => setMenuOpen(false)}
               className={classes.menuItemLink}
             >
@@ -306,7 +356,7 @@ export default function Navigation() {
           ) : (
             <Link
               to={route}
-              target={target}
+              target="_blank"
               key={name}
               onClick={() => setMenuOpen(false)}
               className={classes.menuItemLink}
@@ -387,14 +437,23 @@ export default function Navigation() {
           <CouchersLogo />
           <Hidden smDown>
             <div className={classes.flex}>
-              {menu(data).map(({ name, route, notificationCount }) => (
-                <NavButton
-                  route={route}
-                  label={name}
-                  key={`${name}-nav-button`}
-                  notificationCount={notificationCount}
-                />
-              ))}
+              {navMenu(data).map(
+                ({ name, route, notificationCount, externalLink }) =>
+                  externalLink ? (
+                    <ExternalNavButton
+                      route={route}
+                      label={name}
+                      labelVariant="h2"
+                    />
+                  ) : (
+                    <NavButton
+                      route={route}
+                      label={name}
+                      key={`${name}-nav-button`}
+                      notificationCount={notificationCount}
+                    />
+                  )
+              )}
             </div>
           </Hidden>
         </div>
