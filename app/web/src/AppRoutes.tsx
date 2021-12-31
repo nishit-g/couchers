@@ -20,6 +20,7 @@ import {
   editProfileRoute,
   eventRoute,
   eventsRoute,
+  featurePreviewRoute,
   groupRoute,
   guideRoute,
   jailRoute,
@@ -74,6 +75,9 @@ const ResetPassword = React.lazy(
   () => import("./features/auth/password/ResetPassword")
 );
 const Settings = React.lazy(() => import("./features/auth/Settings"));
+const FeaturePreview = React.lazy(
+  () => import("./features/auth/FeaturePreview")
+);
 const CommunityPage = React.lazy(
   () => import("./features/communities/CommunityPage")
 );
@@ -164,6 +168,9 @@ export default function AppRoutes() {
       </AppRoute>
       <AppRoute isPrivate path={settingsRoute}>
         <Settings />
+      </AppRoute>
+      <AppRoute isPrivate path={featurePreviewRoute}>
+        <FeaturePreview />
       </AppRoute>
       <AppRoute isPrivate={false} path={jailRoute}>
         <Jail />
